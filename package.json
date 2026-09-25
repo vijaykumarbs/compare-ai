@@ -1,0 +1,10 @@
+{
+  "name": "compare-ai",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "description": "Browser-first, evidence-based comparison for documents in common business formats.",
+  "scripts": {
+    "start": "python3 -m http.server 4173"
+  }
+}
