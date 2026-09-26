@@ -99,9 +99,26 @@
       box-shadow: var(--shadow);
     }
 
-    .settings {
-      margin-bottom: 18px;
-    }
+.settings {
+  margin-bottom: 18px;
+}
+
+.settings[hidden] { display: none; }
+.settings-heading {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 18px 18px 0;
+}
+.settings-heading h2 { margin: 0; font-size: 17px; }
+.settings-heading p { margin: 4px 0 0; color: var(--muted); font-size: 13px; }
+.settings-body { border-top: 0; }
+.settings-actions { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 12px; }
+.key-status { min-height: 1.4em; margin: 10px 0 0; color: var(--muted); font-size: 12px; }
+.advanced-provider { margin-top: 14px; padding-top: 12px; border-top: 1px solid var(--border); }
+.advanced-provider summary { cursor: pointer; padding: 4px 0 10px; color: #344054; font-size: 12px; font-weight: 700; }
+.advanced-provider .field { margin-top: 8px; }
 
     .settings summary {
       list-style: none;

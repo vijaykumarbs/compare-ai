@@ -5,22 +5,12 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Compare AI</title>
 
-  <!--
-    Compare AI
-    V1: Browser-only BYOK document comparison.
-
-    Important:
-    - API keys are kept in memory by default. They are NOT persisted to localStorage.
-    - The page sends document text directly to the selected AI provider.
-    - For production, consider a server-side proxy if you want stronger key protection.
-    - Host this file over HTTPS rather than relying on file:// for best browser/API compatibility.
-  -->
-
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/mammoth/1.6.0/mammoth.browser.min.js"></script>
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+  <!-- Keep scripts local and restrict network destinations to supported AI APIs. -->
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self'; style-src 'self'; img-src 'self' data:; font-src 'self' data:; connect-src 'self' https://api.openai.com https://api.anthropic.com https://generativelanguage.googleapis.com https://api.moonshot.ai; worker-src 'self' blob:; object-src 'none'; base-uri 'self'; form-action 'self'" />
 
   <link rel="stylesheet" href="./src/styles.css" />
+  <script src="./src/vendor/mammoth.browser.min.js" defer></script>
+  <script src="./src/vendor/xlsx.full.min.js" defer></script>
 
 </head>
 
@@ -33,62 +23,52 @@
       </div>
 
       <div class="header-actions">
+        <button class="btn" id="settingsToggle" type="button" aria-expanded="false" aria-controls="apiSettings">Settings</button>
         <button class="btn" id="clearBtn" type="button">Clear</button>
       </div>
     </header>
 
-    <details class="panel settings" open>
-      <summary>AI provider & settings</summary>
-
-      <div class="settings-body">
-        <div class="grid">
-          <div class="field">
-            <label for="provider">Provider</label>
-            <select id="provider">
-              <option value="openai">OpenAI API</option>
-              <option value="anthropic">Anthropic / Claude</option>
-              <option value="gemini">Google Gemini API</option>
-              <option value="kimi">Moonshot / Kimi</option>
-              <option value="custom">Custom OpenAI-compatible</option>
-            </select>
-          </div>
-
-          <div class="field">
-            <label for="model">Model</label>
-            <input id="model" autocomplete="off" placeholder="Enter the provider model name" />
-            <div class="help" id="modelHelp"></div>
-          </div>
-
-          <div class="field full">
-            <label for="apiKey">API key</label>
-            <input id="apiKey" type="password" autocomplete="off" placeholder="Paste your API key" />
-            <div class="help">
-              This is an API key, not your ChatGPT / Claude / Gemini consumer login password.
-            </div>
-          </div>
-
-          <div class="field full" id="endpointField" style="display:none;">
-            <label for="endpoint">Custom endpoint</label>
-            <input
-              id="endpoint"
-              autocomplete="off"
-              placeholder="https://your-provider.example/v1/chat/completions"
-            />
-            <div class="help">
-              For an OpenAI-compatible provider, enter its full chat-completions endpoint.
-            </div>
-          </div>
+    <section class="panel settings" id="apiSettings" hidden aria-labelledby="settingsTitle">
+      <div class="settings-heading">
+        <div>
+          <h2 id="settingsTitle">AI access</h2>
+          <p>Enter your API key once. Compare AI will recognize supported key formats automatically.</p>
         </div>
+        <button class="close" id="settingsClose" type="button" aria-label="Close settings">×</button>
+      </div>
+      <div class="settings-body">
+        <div class="field">
+          <label for="apiKey">AI API key</label>
+          <input id="apiKey" type="password" autocomplete="new-password" spellcheck="false" placeholder="Paste your API key" aria-describedby="keyHelp keyStatus" />
+          <div class="help" id="keyHelp">This is an API key from an AI provider, not your account password. Common formats are recognized locally; saving the key does not send a verification request.</div>
+        </div>
+
+        <div class="settings-actions">
+          <button class="btn primary" id="saveKeyBtn" type="button">Save key in this browser</button>
+          <button class="btn" id="removeKeyBtn" type="button">Remove saved key</button>
+        </div>
+        <p class="key-status" id="keyStatus" role="status" aria-live="polite">No key saved.</p>
+
+        <details class="advanced-provider">
+          <summary>Advanced: choose provider if key detection is ambiguous</summary>
+          <div class="field">
+            <label for="providerOverride">Provider</label>
+            <select id="providerOverride">
+              <option value="">Automatic detection</option>
+              <option value="openai">OpenAI</option>
+              <option value="anthropic">Anthropic</option>
+              <option value="gemini">Google Gemini</option>
+              <option value="kimi">Moonshot / Kimi</option>
+            </select>
+            <div class="help">Some legacy keys share prefixes. This optional choice stays in this browser and is used only when automatic detection cannot tell providers apart.</div>
+          </div>
+        </details>
 
         <div class="security-note">
-          <strong>BYOK security:</strong>
-          the key is kept in memory by this page and is not saved to localStorage.
-          The key and extracted document text are sent directly to the provider you select.
-          Do not use this static version with a key you cannot afford to expose to browser JavaScript.
-          For a production SaaS, move provider calls behind your own server.
+          <strong>Key storage:</strong> your key is saved in this browser’s local site storage and stays there across reloads until you remove it or clear this site’s data. It is stored unencrypted and can be read by scripts running on this origin. Use a restricted, low-limit API key. During comparison, the key and extracted text are sent over HTTPS only to the resolved provider. Original files stay in the browser.
         </div>
       </div>
-    </details>
+    </section>
 
     <section class="panel upload">
       <div
@@ -188,7 +168,7 @@
     </section>
 
     <footer>
-      Documents are parsed locally in your browser. Extracted text is sent only to the AI provider you configure.
+      Documents are parsed locally in your browser. Extracted text is sent only to the AI provider used for your comparison.
       This version does not upload documents to a Compare AI server.
     </footer>
   </main>

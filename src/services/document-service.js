@@ -1,8 +1,9 @@
 import { MAX_CHARS_PER_DOCUMENT } from "../config.js";
+import * as pdfjsLib from "../vendor/pdf.min.mjs";
 
 /** Extracts supported files in the browser; no file bytes leave this device. */
 pdfjsLib.GlobalWorkerOptions.workerSrc =
-  "https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js";
+  new URL("../vendor/pdf.worker.min.mjs", import.meta.url).toString();
 
 function getExtension(name) {
   const parts = name.toLowerCase().split(".");
@@ -33,7 +34,12 @@ export async function extractDocument(file) {
 
 async function extractPdf(file) {
   const buffer = await file.arrayBuffer();
-  const pdf = await pdfjsLib.getDocument({ data: buffer }).promise;
+  const pdf = await pdfjsLib.getDocument({
+    data: buffer,
+    cMapUrl: new URL("../vendor/cmaps/", import.meta.url).toString(),
+    cMapPacked: true,
+    standardFontDataUrl: new URL("../vendor/standard_fonts/", import.meta.url).toString()
+  }).promise;
 
   const pages = [];
 
@@ -66,6 +72,9 @@ async function extractPdf(file) {
 }
 
 async function extractDocx(file) {
+  const mammoth = globalThis.mammoth;
+  if (!mammoth) throw new Error("The DOCX parser is unavailable. Reload the app and try again.");
+
   const buffer = await file.arrayBuffer();
   const result = await mammoth.extractRawText({ arrayBuffer: buffer });
   const text = result.value || "";
@@ -74,6 +83,9 @@ async function extractDocx(file) {
 }
 
 async function extractSpreadsheet(file) {
+  const XLSX = globalThis.XLSX;
+  if (!XLSX) throw new Error("The spreadsheet parser is unavailable. Reload the app and try again.");
+
   const buffer = await file.arrayBuffer();
 
   const workbook = XLSX.read(buffer, {

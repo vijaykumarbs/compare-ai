@@ -1,22 +1,38 @@
 import { MAX_FILES, MIN_FILES, PROVIDERS } from "./config.js";
 import { extractDocument } from "./services/document-service.js";
-import { buildComparisonPrompt, callLLM, parseJsonResponse } from "./services/comparison-service.js";
+import {
+  buildComparisonPrompt,
+  callLLM,
+  parseJsonResponse
+} from "./services/comparison-service.js";
+import { resolveProvider } from "./services/provider-detection.js";
+import {
+  loadSavedSettings,
+  removeSavedSettings,
+  saveApiKey,
+  saveProviderOverride,
+  storageKeys
+} from "./services/key-store.js";
 
-
+// UI session state. The key is never rendered into the page or logged.
 let selectedFiles = [];
 let extractedDocuments = [];
-let lastResult = null;
+const savedSettings = loadSavedSettings();
+let apiKey = savedSettings.apiKey;
+let providerOverride = savedSettings.providerOverride;
 
 // -----------------------------
 // DOM
 // -----------------------------
 
-const providerEl = document.getElementById("provider");
-const modelEl = document.getElementById("model");
-const modelHelpEl = document.getElementById("modelHelp");
 const apiKeyEl = document.getElementById("apiKey");
-const endpointEl = document.getElementById("endpoint");
-const endpointField = document.getElementById("endpointField");
+const providerOverrideEl = document.getElementById("providerOverride");
+const keyStatusEl = document.getElementById("keyStatus");
+const settingsEl = document.getElementById("apiSettings");
+const settingsToggle = document.getElementById("settingsToggle");
+const settingsClose = document.getElementById("settingsClose");
+const saveKeyBtn = document.getElementById("saveKeyBtn");
+const removeKeyBtn = document.getElementById("removeKeyBtn");
 
 const dropzone = document.getElementById("dropzone");
 const chooseBtn = document.getElementById("chooseBtn");
@@ -42,32 +58,103 @@ const drawerBody = document.getElementById("drawerBody");
 const drawerClose = document.getElementById("drawerClose");
 
 // -----------------------------
-// Provider settings
+// Saved AI access settings
 // -----------------------------
 
-function updateProviderUI() {
-  const provider = providerEl.value;
-  const config = PROVIDERS[provider];
-
-  if (!modelEl.value || modelEl.dataset.provider !== provider) {
-    modelEl.value = config.defaultModel;
+/** Update the settings summary without ever displaying any part of the key. */
+function renderKeyStatus(message = "") {
+  if (!savedSettings.storageAvailable) {
+    keyStatusEl.textContent = "Browser storage is unavailable. Enable site storage to save an API key.";
+    return;
   }
 
-  modelEl.dataset.provider = provider;
-  modelHelpEl.textContent = config.help;
+  if (!apiKey) {
+    keyStatusEl.textContent = message || "No key saved in this browser.";
+    return;
+  }
 
-  endpointField.style.display = provider === "custom" ? "block" : "none";
-
-  if (provider === "custom") {
-    if (!endpointEl.value) endpointEl.value = config.endpoint;
+  const { provider, detected } = resolveProvider(apiKey, providerOverride);
+  if (provider) {
+    const source = detected ? "provider detected" : "provider set in advanced settings";
+    keyStatusEl.textContent = `Key saved in this browser · ${source}: ${PROVIDERS[provider].label}.`;
   } else {
-    endpointEl.value = config.endpoint;
+    keyStatusEl.textContent = "Key saved in this browser · provider format is ambiguous. Use the advanced provider setting; no key check has been sent.";
   }
 }
 
-providerEl.addEventListener("change", updateProviderUI);
+function setSettingsOpen(open) {
+  settingsEl.hidden = !open;
+  settingsToggle.setAttribute("aria-expanded", String(open));
+  if (open) {
+    settingsEl.scrollIntoView({ behavior: "smooth", block: "start" });
+    apiKeyEl.focus();
+  }
+}
 
-updateProviderUI();
+settingsToggle.addEventListener("click", () => setSettingsOpen(settingsEl.hidden));
+settingsClose.addEventListener("click", () => setSettingsOpen(false));
+
+saveKeyBtn.addEventListener("click", () => {
+  const nextKey = apiKeyEl.value.trim();
+  if (!nextKey) {
+    renderKeyStatus("Paste an API key to save it in this browser.");
+    apiKeyEl.focus();
+    return;
+  }
+
+  try {
+    // A changed key invalidates the old manual fallback, which could point to
+    // a different provider. Ask for a fresh fallback only if needed.
+    if (nextKey !== apiKey) {
+      providerOverride = "";
+      providerOverrideEl.value = "";
+      saveProviderOverride("");
+    }
+    saveApiKey(nextKey);
+    apiKey = nextKey;
+    apiKeyEl.value = "";
+    renderKeyStatus("Key saved in this browser.");
+  } catch {
+    renderKeyStatus("The browser could not save this key. Check the browser's site storage settings and try again.");
+  }
+});
+
+removeKeyBtn.addEventListener("click", () => {
+  try {
+    removeSavedSettings();
+    apiKey = "";
+    providerOverride = "";
+    providerOverrideEl.value = "";
+    apiKeyEl.value = "";
+    renderKeyStatus("Saved key removed from this browser.");
+  } catch {
+    renderKeyStatus("The browser could not remove saved settings. Clear this site's data in browser settings.");
+  }
+});
+
+providerOverrideEl.value = providerOverride;
+providerOverrideEl.addEventListener("change", () => {
+  providerOverride = providerOverrideEl.value;
+  try {
+    saveProviderOverride(providerOverride);
+    renderKeyStatus();
+  } catch {
+    renderKeyStatus("The provider choice could not be saved. Check browser site storage settings.");
+  }
+});
+
+// Keep open tabs consistent if the user clears or changes site data elsewhere.
+window.addEventListener("storage", event => {
+  if (event.key === storageKeys.API_KEY_STORAGE || event.key === storageKeys.PROVIDER_STORAGE) {
+    const latest = loadSavedSettings();
+    apiKey = latest.apiKey;
+    providerOverride = latest.providerOverride;
+    providerOverrideEl.value = providerOverride;
+    renderKeyStatus();
+  }
+});
+
+renderKeyStatus();
 
 // -----------------------------
 // File upload
@@ -195,24 +282,31 @@ function renderFileList() {
 }
 
 // -----------------------------
-// Local document extraction
-// -----------------------------
-
-
-// -----------------------------
-// Comparison prompt
-// -----------------------------
-// -----------------------------
 // Compare flow
 // -----------------------------
 
 compareBtn.addEventListener("click", compareDocuments);
 
+/** Coordinate one comparison; parsing and provider calls stay in services. */
 async function compareDocuments() {
   if (selectedFiles.length < MIN_FILES) {
     showStatus(`Select at least ${MIN_FILES} documents.`, "error");
     return;
   }
+
+  if (!apiKey) {
+    setSettingsOpen(true);
+    showStatus("Add your AI API key in Settings to start a comparison.", "error");
+    return;
+  }
+
+  const selection = resolveProvider(apiKey, providerOverride);
+  if (!selection.provider) {
+    setSettingsOpen(true);
+    showStatus("This key format cannot be identified safely. Choose the provider in Settings; the key has not been sent.", "error");
+    return;
+  }
+  const provider = selection.provider;
 
   setLoading(true);
   resultsEl.classList.remove("show");
@@ -247,12 +341,16 @@ async function compareDocuments() {
 
     const prompt = buildComparisonPrompt(extractedDocuments, comparisonQuestion.value);
 
+    // Route to one provider only; never probe a key against multiple services.
     showStatus(
-      `Sending ${extractedDocuments.length} document${extractedDocuments.length === 1 ? "" : "s"} to ${PROVIDERS[providerEl.value].label}…`,
+      `Sending extracted text for ${extractedDocuments.length} documents to the AI service…`,
       "info"
     );
-
-    const raw = await callLLM(prompt, { provider: providerEl.value, apiKey: apiKeyEl.value.trim(), model: modelEl.value.trim(), endpoint: endpointEl.value.trim() });
+    const raw = await callLLM(prompt, {
+      provider,
+      apiKey,
+      model: PROVIDERS[provider].defaultModel
+    });
 
     showStatus("Rendering comparison…", "info");
 
@@ -260,7 +358,6 @@ async function compareDocuments() {
 
     validateResult(result);
 
-    lastResult = result;
     renderResults(result);
 
     const warnings = extractedDocuments
@@ -280,8 +377,8 @@ async function compareDocuments() {
     resultsEl.scrollIntoView({ behavior: "smooth", block: "start" });
 
   } catch (error) {
-    console.error(error);
-    showStatus(formatError(error), "error");
+    // Provider errors can echo request details, so redact the saved key first.
+    showStatus(formatError(error, apiKey), "error");
   } finally {
     setLoading(false);
   }
@@ -301,14 +398,15 @@ function validateResult(result) {
   }
 }
 
-function formatError(error) {
-  const message = error?.message || String(error);
+function formatError(error, secret = "") {
+  let message = error?.message || String(error);
+  if (secret) message = message.split(secret).join("[redacted]");
 
   if (/Failed to fetch|NetworkError|Load failed/i.test(message)) {
     return (
-      "The browser could not reach the selected provider. " +
-      "This can be caused by CORS, an invalid endpoint/key, a network blocker, " +
-      "or opening the app from file://. Host the app over HTTPS and verify the provider's browser/API access requirements."
+      "The browser could not reach the AI service. " +
+      "This may be caused by provider browser-access rules, an invalid key, or a network blocker. " +
+      "Run the app over localhost or HTTPS and check the provider's browser/API access requirements."
     );
   }
 
@@ -549,7 +647,10 @@ evidenceDrawer.addEventListener("click", event => {
 });
 
 document.addEventListener("keydown", event => {
-  if (event.key === "Escape") closeEvidence();
+  if (event.key === "Escape") {
+    closeEvidence();
+    setSettingsOpen(false);
+  }
 });
 
 function closeEvidence() {
@@ -563,7 +664,6 @@ function closeEvidence() {
 clearBtn.addEventListener("click", () => {
   selectedFiles = [];
   extractedDocuments = [];
-  lastResult = null;
 
   fileInput.value = "";
   comparisonQuestion.value = "";

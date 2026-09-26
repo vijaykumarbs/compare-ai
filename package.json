@@ -5,6 +5,6 @@
   "type": "module",
   "description": "Browser-first, evidence-based comparison for documents in common business formats.",
   "scripts": {
-    "start": "python3 -m http.server 4173"
+    "start": "python3 -m http.server 4173 --bind 127.0.0.1"
   }
 }
