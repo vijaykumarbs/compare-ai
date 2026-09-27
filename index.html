@@ -17,13 +17,16 @@
 <body>
   <main class="app">
     <header>
-      <div class="brand">
+      <div class="brand brand-lockup">
+        <div class="brand-mark" aria-hidden="true">⇄</div>
+        <div>
         <h1>Compare AI</h1>
         <p>Upload documents. Find what's different, missing, and worth your attention.</p>
+        </div>
       </div>
 
       <div class="header-actions">
-        <button class="btn" id="settingsToggle" type="button" aria-expanded="false" aria-controls="apiSettings">Settings</button>
+        <button class="btn-settings" id="settingsToggle" type="button" title="Settings" aria-label="Settings" aria-expanded="false" aria-controls="apiSettings">⚙</button>
         <button class="btn" id="clearBtn" type="button">Clear</button>
       </div>
     </header>
@@ -67,10 +70,28 @@
         <div class="security-note">
           <strong>Key storage:</strong> your key is saved in this browser’s local site storage and stays there across reloads until you remove it or clear this site’s data. It is stored unencrypted and can be read by scripts running on this origin. Use a restricted, low-limit API key. During comparison, the key and extracted text are sent over HTTPS only to the resolved provider. Original files stay in the browser.
         </div>
+
+        <div class="provider-help">
+          <p class="provider-help-title">Where to get an API key</p>
+          <div class="provider-cards">
+            <a class="provider-card" href="https://aistudio.google.com/app/apikey" target="_blank" rel="noopener noreferrer">
+              <strong>Google Gemini</strong><span>Create a key in Google AI Studio →</span>
+            </a>
+            <a class="provider-card" href="https://console.anthropic.com" target="_blank" rel="noopener noreferrer">
+              <strong>Anthropic Claude</strong><span>Open the Anthropic Console →</span>
+            </a>
+            <a class="provider-card" href="https://platform.openai.com/api-keys" target="_blank" rel="noopener noreferrer">
+              <strong>OpenAI</strong><span>Manage API keys →</span>
+            </a>
+          </div>
+        </div>
       </div>
     </section>
 
     <section class="panel upload">
+      <div class="upload-heading">
+        <span class="section-eyebrow">UPLOAD DOCUMENTS</span>
+      </div>
       <div
         class="dropzone"
         id="dropzone"
@@ -78,8 +99,10 @@
         tabindex="0"
         aria-label="Upload documents"
       >
-        <h2>Drop documents here</h2>
-        <p>PDF, DOCX, XLSX, XLS, CSV, TXT or MD · 2–10 documents</p>
+        <div class="drop-icon" aria-hidden="true">📄</div>
+        <h2>Drop 2–10 files here, or choose files</h2>
+        <p>Quotations, contracts, offers, policies — any comparable set</p>
+        <span class="file-types">PDF · DOCX · XLSX / CSV · TXT / MD</span>
         <button class="btn" id="chooseBtn" type="button">Choose files</button>
         <input
           id="fileInput"

@@ -653,3 +653,75 @@ th { background: #f5f8fc; }
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after { scroll-behavior: auto !important; animation-duration: 0.01ms !important; transition-duration: 0.01ms !important; }
 }
+
+/* Compact, document-first layout based on the supplied UI reference. */
+:root {
+  --bg: #f7f9fa; --panel: #fff; --text: #1a2433; --muted: #5a6a7a;
+  --border: #dde3e9; --soft: #f0f4f7; --accent: #1b5fa8; --accent-contrast: #fff;
+  --shadow: 0 5px 18px rgba(26, 48, 76, 0.045); --radius: 12px;
+}
+body { background: var(--bg); color: var(--text); }
+.app { max-width: 960px; padding: 30px 22px 48px; }
+header { align-items: center; margin-bottom: 24px; }
+.brand-lockup { display: flex; align-items: center; gap: 12px; }
+.brand-mark { display: grid; place-items: center; flex: 0 0 40px; height: 40px; border-radius: 10px; background: var(--accent); color: white; font-size: 21px; }
+.brand h1 { font-size: 21px; letter-spacing: -0.025em; color: var(--text); }
+.brand p { font-size: 13px; }
+.header-actions { align-items: center; }
+.btn-settings { position: relative; display: grid; place-items: center; width: 38px; height: 38px; border: 1px solid var(--border); border-radius: 9px; background: #fff; color: var(--muted); font-size: 18px; transition: background-color 140ms ease, border-color 140ms ease, color 140ms ease; }
+.btn-settings:hover, .btn-settings[aria-expanded="true"] { border-color: #9bb9d7; background: #edf4fb; color: var(--accent); }
+.btn { border-radius: 9px; }
+.btn.primary { background: var(--accent); border-color: var(--accent); }
+.panel { box-shadow: var(--shadow); }
+.settings { border-radius: 12px; }
+.settings-heading { padding: 16px 18px 0; }
+.settings-heading h2 { font-size: 15px; }
+.settings-body { padding: 16px 18px 18px; }
+.security-note { background: #f7f9fb; }
+.provider-help { margin-top: 16px; }
+.provider-help-title, .section-eyebrow { display: block; margin: 0 0 9px; color: var(--muted); font-size: 11px; font-weight: 700; letter-spacing: .055em; text-transform: uppercase; }
+.provider-cards { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; }
+.provider-card { display: flex; flex-direction: column; gap: 3px; padding: 10px 12px; border: 1px solid var(--border); border-radius: 9px; background: var(--soft); color: var(--text); text-decoration: none; transition: border-color 140ms ease, background-color 140ms ease; }
+.provider-card:hover { border-color: #a9c2dc; background: #edf4fb; }
+.provider-card strong { font-size: 12px; }
+.provider-card span { color: var(--muted); font-size: 11px; }
+.upload { padding: 18px; }
+.upload-heading { margin-bottom: 9px; }
+.dropzone { position: relative; cursor: pointer; padding: 28px 20px; border-radius: 10px; border-color: #b8c4cf; background: #f8fafc; }
+.dropzone:hover, .dropzone.dragover { border-color: var(--accent); background: #edf4fb; }
+.drop-icon { margin-bottom: 8px; font-size: 30px; }
+.dropzone h2 { color: #193958; font-size: 16px; font-weight: 600; }
+.dropzone p { margin-bottom: 3px; font-size: 12px; }
+.file-types { color: #8a9bab; font-size: 11px; }
+.file-row { border-radius: 9px; }
+.controls { margin-top: 14px; }
+.controls-left { color: var(--muted); }
+.status { border-radius: 9px; }
+.hero-result { padding: 18px; }
+.hero-result h2 { font-size: 16px; }
+.section { padding: 16px; border-radius: 12px; }
+.section-title h3 { color: #1b3656; font-size: 14px; }
+.badge { color: #365b80; background: #eef5fc; border-color: #dbe9f6; }
+.table-wrap { border-radius: 9px; }
+th { background: #f3f6f9; color: #536477; }
+.evidence-btn { color: #285c8e; }
+.card { border-radius: 9px; }
+footer { line-height: 1.6; }
+@media (max-width: 760px) {
+  .app { padding: 20px 14px 36px; }
+  header { flex-direction: row; align-items: center; gap: 12px; }
+  .brand p { max-width: 40ch; }
+  .header-actions { flex-shrink: 0; }
+  .provider-cards { grid-template-columns: 1fr; }
+  .dropzone { padding: 24px 14px; }
+}
+@media (max-width: 480px) {
+  header { align-items: flex-start; }
+  .brand-lockup { gap: 9px; }
+  .brand-mark { flex-basis: 34px; height: 34px; font-size: 18px; }
+  .brand h1 { font-size: 18px; }
+  .brand p { font-size: 11px; }
+  .header-actions { gap: 5px; }
+  .btn { padding: 8px 10px; font-size: 12px; }
+  .btn-settings { width: 34px; height: 34px; }
+}
