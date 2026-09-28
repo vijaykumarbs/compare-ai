@@ -1,6 +1,12 @@
 # Compare AI
 
-Compare AI compares two to ten documents and returns an evidence-first matrix, key differences, clarifications, and potential risks. Supported inputs: PDF, DOCX, XLSX, XLS, CSV, TXT, and Markdown.
+# Compare AI
+
+During ERP selection, fit-gap, and design decisions, implementation teams often compare requirements, process documents, vendor responses, and configuration evidence manually. Copying facts between spreadsheets and meeting decks is slow, makes source traceability fragile, and can hide material differences that should trigger clarification before a decision.
+
+Compare AI produces an evidence-first matrix across two to ten documents, with key differences, clarification questions, and potential risks. It is intended to accelerate review, not choose a solution or replace a business owner’s decision. The product rationale, prioritization, deferred scope, and pilot measures are in [PRODUCT.md](PRODUCT.md).
+
+**Current evidence status:** this repository does not yet record a completed pilot or measured time savings. The value proposition is a hypothesis pending a timed review with implementation practitioners.
 
 ## Run on a customer laptop
 
