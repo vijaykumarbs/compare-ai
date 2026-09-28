@@ -1,34 +1,59 @@
-# Compare AI — Product brief
+# Compare AI — Product plan
 
-## Problem and evidence
+## What it does
 
-ERP selection, fit-gap, and design work involves reconciling multiple sources: requirements, vendor responses, process documents, configuration decisions, and meeting outputs. Teams commonly compare them by hand in spreadsheets and decks. This takes analyst time, weakens traceability between a claim and its source, and can leave unresolved differences hidden until a later workshop or decision.
+Compare AI reads 2 to 10 documents and makes a comparison table. It lists what each document says, points to supporting text, shows differences, and raises questions that need an answer.
 
-This is a workflow hypothesis based on typical implementation analysis. No completed participant pilot, measured baseline, or customer endorsement is documented in this repository. There are no substantiated time-saving claims.
+It helps prepare a review. It does not choose a vendor or make an ERP design decision.
 
-## Product choice and prioritization
+## Who it is for
 
-Prioritize an evidence-first comparison matrix across 2–10 documents. Show source evidence, differences, clarification needs, and potential risks, and let the user make the decision. Local parsing and bounded extracted text keep the initial workflow practical while retaining explicit user control over provider disclosure.
+An ERP business analyst or project manager comparing requirements, vendor responses, process documents, or design decisions.
 
-## Success criteria
+## The problem
 
-Time an implementation analyst comparing a representative document set using the current process and Compare AI. Review results with a second practitioner against a manually prepared reference. Measure:
+Teams compare documents by reading them side by side and copying findings into spreadsheets or presentations. This takes analyst time. It is also easy to lose the link between a finding and the source document, or to miss a difference that needs discussion.
 
-- elapsed time to a decision-ready comparison;
-- material differences and clarification questions found versus the reference;
-- unsupported statements or source-attribution errors;
-- reviewer corrections and confidence in traceability;
-- number and type of documents the workflow cannot parse or safely disclose.
+This is the problem the product is designed to address. No pilot or measured time savings have been reported.
 
-Set acceptable thresholds with participants before the pilot. Faster output is not success if material differences are missed or evidence cannot be traced.
+## First version
 
-## Deferred
+1. Add 2 to 10 PDF, Word, Excel, CSV, text, or Markdown files.
+2. The browser reads the documents and sends the extracted text and the user's key to one selected AI provider when comparison starts.
+3. Review the comparison table, differences, questions, and possible risks.
+4. Check each finding against its source before using it in a decision.
 
-- selecting a winning vendor or making autonomous design decisions;
-- integrations with requirements, ticketing, or ERP configuration systems;
-- collaborative annotations, access control, and audit history;
-- OCR guarantees for image-only scans and unrestricted document sizes.
+Scanned image-only PDFs are not read by the current version. Each document's extracted text is limited to 18,000 characters.
 
-## Learning to capture
+## Why this scope
 
-Capture which document pairings create the most rework, what evidence format practitioners trust, how often they need clarifications versus summaries, parsing failures, and provider-data restrictions. Keep source documents and confidential findings out of Git.
+Start with comparisons that keep source evidence beside each finding. Analysts can then check important claims instead of treating the AI summary as the final answer. Leave the decision with the project team.
+
+## Not included
+
+- selecting the winning vendor or choosing a design;
+- reading scanned image-only PDFs with OCR;
+- connecting to requirements or ERP configuration systems;
+- team comments, approvals, or decision history;
+- unlimited document sizes or file counts.
+
+## Pilot and measures
+
+**Status: no pilot run yet.** Choose a document set that an analyst has already compared. Have a reviewer prepare the correct differences and questions. Time the normal review and the review with Compare AI.
+
+Record:
+
+- minutes to prepare a review-ready comparison;
+- important differences and questions found or missed;
+- findings that do not match their cited source;
+- corrections the reviewer makes;
+- documents the tool cannot read or that cannot be sent to the provider.
+
+Agree in advance which missed differences or incorrect source references make the result unacceptable. Faster output is not a success if it misses an important issue. Do not publish project documents or claim savings without measured results and permission.
+
+## Questions to answer
+
+- Which document pairs take analysts the most time to compare?
+- Do reviewers trust the source references and use them?
+- Which findings need a question for the business owner rather than a summary?
+- Which documents cannot be shared with an AI provider?
